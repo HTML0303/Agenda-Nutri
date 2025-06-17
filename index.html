@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agenda con Nutricionista Valeria</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"/>
+</head>
+<body>
+  <div class="container mt-5">
+    <h1 class="text-center">Agenda tu consulta nutricional</h1>
+    <div class="text-center mt-4">
+      <a href="login.html" class="btn btn-outline-primary">Panel de la Nutricionista</a>
+    </div>
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <h4>Formulario de reserva</h4>
+        <form id="agendaForm" enctype="multipart/form-data">
+          <input class="form-control mb-2" type="text" placeholder="Nombre completo" id="nombre" required />
+          <input class="form-control mb-2" type="email" placeholder="Correo electrónico" id="correo" required />
+          <input class="form-control mb-2" type="tel" placeholder="Teléfono" id="telefono" required />
+          <input class="form-control mb-2" type="date" id="fecha" required />
+          <select id="metodoPago" class="form-select mb-2">
+            <option value="Ninguno">Selecciona método de pago</option>
+            <option value="Efectivo">Efectivo</option>
+            <option value="Zelle">Zelle</option>
+            <option value="Pago movil">Pago movil</option>
+          </select>
+          <input class="form-control mb-2" type="file" id="captura" accept="image/*" />
+          <label class="form-check-label mb-3">
+            <input type="checkbox" class="form-check-input me-2" id="pagado" />
+            ¿Ya realizaste el pago?
+          </label>
+          <button class="btn btn-success w-100" type="submit">Agendar</button>
+        </form>
+      </div>
+      <div class="col-md-6">
+        <h4>Calendario de disponibilidad</h4>
+        <div id="calendar"></div>
+      </div>
+    </div>
+
+    <hr class="my-5"/>
+    <div class="info-nutri text-center">
+      <h2>Dra. Valeria Merchan</h2>
+      <p>Nutricionista Clínica - Especialista en nutrición deportiva</p>
+      <p>Consulta online y presencial</p>
+      <p>Horario de atención: <strong>Lunes a Viernes, 9:00 am - 6:00 pm</strong></p>
+      <p>WhatsApp: <a href="https://wa.me/584142674367" target="_blank">+58 4142674367</a></p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('agendaForm');
+      const calendarEl = document.getElementById('calendar');
+      let citas = JSON.parse(localStorage.getItem('citasNutri')) || [];
+
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        events: citas.map(c => ({
+          id: c.id,
+          title: `${c.nombre} ${c.pagado === "Sí" ? "✅" : "❌"}`,
+          start: c.fecha
+        }))
+      });
+      calendar.render();
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const nombre = document.getElementById("nombre").value.trim();
+        const correo = document.getElementById("correo").value.trim();
+        const telefono = document.getElementById("telefono").value.trim();
+        const fecha = document.getElementById("fecha").value;
+        const metodoPago = document.getElementById("metodoPago").value;
+        const pagado = document.getElementById("pagado").checked ? "Sí" : "No";
+
+        const nuevaCita = {
+          id: String(Date.now()),
+          nombre,
+          correo,
+          telefono,
+          fecha,
+          metodoPago,
+          pagado
+        };
+
+        citas.push(nuevaCita);
+        localStorage.setItem("citasNutri", JSON.stringify(citas));
+
+        calendar.addEvent({
+          id: nuevaCita.id,
+          title: `${nombre} ${pagado === "Sí" ? "✅" : "❌"}`,
+          start: fecha
+        });
+
+        const mensaje = `*Nueva cita agendada:*\n\n` +
+          `👤 *Nombre:* ${nombre}\n` +
+          `📧 *Correo:* ${correo}\n` +
+          `📱 *Teléfono:* ${telefono}\n` +
+          `📅 *Fecha:* ${fecha}\n` +
+          `💳 *Método de pago:* ${metodoPago}\n` +
+          `💰 *¿Pagado?:* ${pagado}`;
+
+        const numeroWhatsApp = "584142674367";
+        const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+
+        Swal.fire("Cita registrada", "Se abrirá WhatsApp para notificar.", "success").then(() => {
+          window.open(url, "_blank");
+          form.reset();
+        });
+      });
+    });
+  </script>
+</body>
+</html>
