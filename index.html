@@ -2,235 +2,130 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Panel de Citas - Nutricionista Valeria</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
-  <style>
-    img.captura-img { width: 80px; border-radius: 6px; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agenda con Nutricionista Valeria</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css"/>
 </head>
 <body>
   <div class="container mt-5">
-    <div class="d-flex justify-content-end mb-3">
-      <button class="btn btn-outline-secondary" id="cerrarSesion">Cerrar sesión</button>
+    <h1 class="text-center">Agenda tu consulta nutricional</h1>
+    <div class="text-center mt-4">
+      <a href="login.html" class="btn btn-outline-primary">Panel de la Nutricionista</a>
+    </div>
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <h4>Formulario de reserva</h4>
+        <form id="agendaForm" enctype="multipart/form-data">
+          <input class="form-control mb-2" type="text" placeholder="Nombre completo" id="nombre" required />
+          <input class="form-control mb-2" type="email" placeholder="Correo electrónico" id="correo" required />
+          <input class="form-control mb-2" type="tel" placeholder="Teléfono" id="telefono" required />
+          <label for="fecha">Elija la fecha</label>
+          <input class="form-control mb-2" type="date" id="fecha" required />
+          <label for="hora">Elija la hora</label>
+          <select class="form-select mb-2" id="hora" required>
+            <option value="">Selecciona una hora</option>
+            <option value="14:30">2:30 PM</option>
+            <option value="15:00">3:00 PM</option>
+            <option value="15:30">3:30 PM</option>
+            <option value="16:00">4:00 PM</option>
+            <option value="16:30">4:30 PM</option>
+          </select>
+          <select id="metodoPago" class="form-select mb-2">
+            <option value="Ninguno">Selecciona método de pago</option>
+            <option value="Efectivo">Efectivo</option>
+            <option value="Zelle">Zelle</option>
+            <option value="Pago movil">Pago movil</option>
+          </select>
+          
+            <input type="checkbox" class="form-check-input me-2" id="pagado" />
+            ¿Ya realizaste el pago?
+          </label>
+          <button class="btn btn-success w-100" type="submit">Agendar</button>
+        </form>
+      </div>
+      <div class="col-md-6">
+        <h4>Calendario de disponibilidad</h4>
+        <div id="calendar"></div>
+      </div>
     </div>
 
-    <h1 class="text-center mb-4">Panel de Citas - Dra. Valeria</h1>
-
-    <div class="mb-5">
-      <h4>Calendario de Citas</h4>
-      <div id="calendar"></div>
-    </div>
-
-    <hr class="my-4" />
-
-    <h4>Listado de todas las citas agendadas</h4>
-    <table class="table table-bordered table-hover mt-3">
-      <thead class="table-dark">
-        <tr>
-          <th>Nombre</th>
-          <th>Correo</th>
-          <th>Teléfono</th>
-          <th>Fecha</th>
-          <th>Método de pago</th>
-          <th>Pagado</th>
-          <th>Captura</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="tablaCitas"></tbody>
-    </table>
-  </div>
-
-  <!-- Modal para editar -->
-  <div class="modal fade" id="modalEditar" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <form id="formEditar" class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalEditarLabel">Editar Cita</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="editId" />
-          <div class="mb-3">
-            <label for="editNombre" class="form-label">Nombre</label>
-            <input type="text" id="editNombre" class="form-control" required />
-          </div>
-          <div class="mb-3">
-            <label for="editCorreo" class="form-label">Correo</label>
-            <input type="email" id="editCorreo" class="form-control" required />
-          </div>
-          <div class="mb-3">
-            <label for="editTelefono" class="form-label">Teléfono</label>
-            <input type="tel" id="editTelefono" class="form-control" required />
-          </div>
-          <div class="mb-3">
-            <label for="editFecha" class="form-label">Fecha</label>
-            <input type="date" id="editFecha" class="form-control" required />
-          </div>
-          <div class="mb-3">
-            <label for="editHora" class="form-label">Hora</label>
-            <input type="time" id="editHora" class="form-control" required min="14:30" max="16:30"/>
-          </div>
-          <div class="mb-3">
-            <label for="editMetodoPago" class="form-label">Método de Pago</label>
-            <select id="editMetodoPago" class="form-select" required>
-              <option value="Efectivo">Efectivo</option>
-              <option value="Zelle">Zelle</option>
-              <option value="Pago movil">Pago móvil</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label for="editPagado" class="form-label">Pagado</label>
-            <select id="editPagado" class="form-select" required>
-              <option value="false">No</option>
-              <option value="true">Sí</option>
-            </select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-        </div>
-      </form>
+    <hr class="my-5"/>
+    <div class="info-nutri text-center">
+      <h2>Licenciada. Valeria Merchan</h2>
+      <p>Nutricionista Clínica - Especialista en nutrición deportiva</p>
+      <p>Consulta online y presencial</p>
+      <p>Horario de atención: <strong>Lunes a Viernes, 2:30 am - 4:30 pm</strong></p>
+      <p>WhatsApp: <a href="https://wa.me/584142674367" target="_blank">+58 4142674367</a></p>
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const tabla = document.getElementById('tablaCitas');
+      const form = document.getElementById('agendaForm');
       const calendarEl = document.getElementById('calendar');
-      const formEditar = document.getElementById('formEditar');
       let citas = JSON.parse(localStorage.getItem('citasNutri')) || [];
 
-      citas = citas.map(cita => {
-        if (!cita.id) cita.id = 'id-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
-        return cita;
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        events: citas.map(c => ({
+          id: c.id,
+          title: `${c.nombre} ${c.pagado === "Sí" ? "✅" : "❌"}`,
+          start: c.fecha
+        }))
       });
+      calendar.render();
 
-      const modalEditar = new bootstrap.Modal(document.getElementById('modalEditar'));
-      let calendar;
-
-      function renderTabla() {
-        tabla.innerHTML = '';
-        citas.forEach(cita => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${cita.nombre}</td>
-            <td>${cita.correo}</td>
-            <td>${cita.telefono}</td>
-            <td>${cita.fecha.replace('T', ' ')}</td>
-            <td>${cita.metodoPago}</td>
-            <td>
-              <select class="form-select form-select-sm" onchange="marcarPago('${cita.id}', this.value)">
-                <option value="false" ${!cita.pagado ? 'selected' : ''}>No</option>
-                <option value="true" ${cita.pagado ? 'selected' : ''}>Sí</option>
-              </select>
-            </td>
-            <td>${cita.captura ? `<img src="${cita.captura}" class="captura-img" />` : 'No'}</td>
-            <td>
-              <button class="btn btn-sm btn-warning me-1" onclick="abrirEditar('${cita.id}')">Editar</button>
-              <button class="btn btn-sm btn-danger" onclick="eliminarCita('${cita.id}')">Eliminar</button>
-            </td>
-          `;
-          tabla.appendChild(row);
-        });
-      }
-
-      function renderCalendar() {
-        if (calendar) calendar.destroy();
-        calendar = new FullCalendar.Calendar(calendarEl, {
-          initialView: 'dayGridMonth',
-          events: citas.map(c => ({
-            id: c.id,
-            title: `${c.nombre} ${c.pagado ? '✅' : '❌'}`,
-            start: c.fecha
-          }))
-        });
-        calendar.render();
-      }
-
-      window.eliminarCita = function (id) {
-        Swal.fire({
-          title: '¿Eliminar esta cita?',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Sí, eliminar',
-          cancelButtonText: 'Cancelar'
-        }).then(result => {
-          if (result.isConfirmed) {
-            citas = citas.filter(c => c.id !== id);
-            guardarYCargar();
-            Swal.fire('Eliminada', 'La cita ha sido eliminada.', 'success');
-          }
-        });
-      };
-
-      window.marcarPago = function (id, valor) {
-        const cita = citas.find(c => c.id === id);
-        if (cita) {
-          cita.pagado = valor === 'true';
-          guardarYCargar();
-        }
-      };
-
-      window.abrirEditar = function (id) {
-        const cita = citas.find(c => c.id === id);
-        if (!cita) return;
-        document.getElementById('editId').value = cita.id;
-        document.getElementById('editNombre').value = cita.nombre;
-        document.getElementById('editCorreo').value = cita.correo;
-        document.getElementById('editTelefono').value = cita.telefono;
-        const [fecha, hora] = cita.fecha.split('T');
-        document.getElementById('editFecha').value = fecha;
-        document.getElementById('editHora').value = hora;
-        document.getElementById('editMetodoPago').value = cita.metodoPago;
-        document.getElementById('editPagado').value = cita.pagado ? 'true' : 'false';
-
-        modalEditar.show();
-      };
-
-      formEditar.addEventListener('submit', e => {
+      form.addEventListener('submit', (e) => {
         e.preventDefault();
-        const id = document.getElementById('editId').value;
-        const cita = citas.find(c => c.id === id);
-        if (!cita) return;
 
-        const fecha = document.getElementById('editFecha').value;
-        const hora = document.getElementById('editHora').value;
-        if (hora < "14:30" || hora > "16:30") {
-          Swal.fire("Hora inválida", "Solo se permiten horarios entre 2:30 PM y 4:30 PM.", "error");
-          return;
-        }
+        const nombre = document.getElementById("nombre").value.trim();
+        const correo = document.getElementById("correo").value.trim();
+        const telefono = document.getElementById("telefono").value.trim();
+        const fecha = document.getElementById("fecha").value;
+        const hora = document.getElementById("hora").value;
+        const metodoPago = document.getElementById("metodoPago").value;
+        const pagado = document.getElementById("pagado").checked ? "Sí" : "No";
 
-        cita.nombre = document.getElementById('editNombre').value.trim();
-        cita.correo = document.getElementById('editCorreo').value.trim();
-        cita.telefono = document.getElementById('editTelefono').value.trim();
-        cita.fecha = `${fecha}T${hora}`;
-        cita.metodoPago = document.getElementById('editMetodoPago').value;
-        cita.pagado = document.getElementById('editPagado').value === 'true';
+        const fechaCompleta = `${fecha}T${hora}`;
 
-        guardarYCargar();
-        modalEditar.hide();
-        Swal.fire('Actualizada', 'La cita ha sido actualizada.', 'success');
+        const nuevaCita = {
+          id: String(Date.now()),
+          nombre,
+          correo,
+          telefono,
+          fecha: fechaCompleta,
+          metodoPago,
+          pagado
+        };
+
+        citas.push(nuevaCita);
+        localStorage.setItem("citasNutri", JSON.stringify(citas));
+
+        calendar.addEvent({
+          id: nuevaCita.id,
+          title: `${nombre} ${pagado === "Sí" ? "✅" : "❌"}`,
+          start: fechaCompleta
+        });
+
+        const mensaje = `*Nueva cita agendada:*
+\n\n👤 *Nombre:* ${nombre}
+📧 *Correo:* ${correo}
+📱 *Teléfono:* ${telefono}
+📅 *Fecha:* ${fecha} ${hora}
+💳 *Método de pago:* ${metodoPago}
+💰 *¿Pagado?:* ${pagado}`;
+
+        const numeroWhatsApp = "584142674367";
+        const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+
+        Swal.fire("Cita registrada", "Se abrirá WhatsApp para notificar.", "success").then(() => {
+          window.open(url, "_blank");
+          form.reset();
+        });
       });
-
-      function guardarYCargar() {
-        localStorage.setItem('citasNutri', JSON.stringify(citas));
-        renderTabla();
-        renderCalendar();
-      }
-
-      document.getElementById('cerrarSesion').addEventListener('click', () => {
-        window.location.href = 'index.html';
-      });
-
-      guardarYCargar();
     });
   </script>
 </body>
