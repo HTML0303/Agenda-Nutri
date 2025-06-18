@@ -43,7 +43,7 @@
     </table>
   </div>
 
-  
+  <!-- Modal para editar -->
   <div class="modal fade" id="modalEditar" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true">
     <div class="modal-dialog">
       <form id="formEditar" class="modal-content">
@@ -70,8 +70,16 @@
             <input type="date" id="editFecha" class="form-control" required />
           </div>
           <div class="mb-3">
+            <label for="editHora" class="form-label">Hora</label>
+            <input type="time" id="editHora" class="form-control" required min="14:30" max="16:30"/>
+          </div>
+          <div class="mb-3">
             <label for="editMetodoPago" class="form-label">Método de Pago</label>
-            <input type="text" id="editMetodoPago" class="form-control" required />
+            <select id="editMetodoPago" class="form-select" required>
+              <option value="Efectivo">Efectivo</option>
+              <option value="Zelle">Zelle</option>
+              <option value="Pago movil">Pago móvil</option>
+            </select>
           </div>
           <div class="mb-3">
             <label for="editPagado" class="form-label">Pagado</label>
@@ -80,7 +88,6 @@
               <option value="true">Sí</option>
             </select>
           </div>
-          
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -90,6 +97,7 @@
     </div>
   </div>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -97,17 +105,15 @@
     document.addEventListener('DOMContentLoaded', () => {
       const tabla = document.getElementById('tablaCitas');
       const calendarEl = document.getElementById('calendar');
+      const formEditar = document.getElementById('formEditar');
       let citas = JSON.parse(localStorage.getItem('citasNutri')) || [];
 
-      
       citas = citas.map(cita => {
         if (!cita.id) cita.id = 'id-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
         return cita;
       });
 
       const modalEditar = new bootstrap.Modal(document.getElementById('modalEditar'));
-      const formEditar = document.getElementById('formEditar');
-
       let calendar;
 
       function renderTabla() {
@@ -118,7 +124,7 @@
             <td>${cita.nombre}</td>
             <td>${cita.correo}</td>
             <td>${cita.telefono}</td>
-            <td>${cita.fecha}</td>
+            <td>${cita.fecha.replace('T', ' ')}</td>
             <td>${cita.metodoPago}</td>
             <td>
               <select class="form-select form-select-sm" onchange="marcarPago('${cita.id}', this.value)">
@@ -137,9 +143,7 @@
       }
 
       function renderCalendar() {
-        if(calendar) {
-          calendar.destroy();
-        }
+        if (calendar) calendar.destroy();
         calendar = new FullCalendar.Calendar(calendarEl, {
           initialView: 'dayGridMonth',
           events: citas.map(c => ({
@@ -151,11 +155,9 @@
         calendar.render();
       }
 
-      
       window.eliminarCita = function (id) {
         Swal.fire({
           title: '¿Eliminar esta cita?',
-          text: 'Esta acción no se puede deshacer.',
           icon: 'warning',
           showCancelButton: true,
           confirmButtonText: 'Sí, eliminar',
@@ -184,7 +186,9 @@
         document.getElementById('editNombre').value = cita.nombre;
         document.getElementById('editCorreo').value = cita.correo;
         document.getElementById('editTelefono').value = cita.telefono;
-        document.getElementById('editFecha').value = cita.fecha;
+        const [fecha, hora] = cita.fecha.split('T');
+        document.getElementById('editFecha').value = fecha;
+        document.getElementById('editHora').value = hora;
         document.getElementById('editMetodoPago').value = cita.metodoPago;
         document.getElementById('editPagado').value = cita.pagado ? 'true' : 'false';
 
@@ -197,16 +201,23 @@
         const cita = citas.find(c => c.id === id);
         if (!cita) return;
 
+        const fecha = document.getElementById('editFecha').value;
+        const hora = document.getElementById('editHora').value;
+        if (hora < "14:30" || hora > "16:30") {
+          Swal.fire("Hora inválida", "Solo se permiten horarios entre 2:30 PM y 4:30 PM.", "error");
+          return;
+        }
+
         cita.nombre = document.getElementById('editNombre').value.trim();
         cita.correo = document.getElementById('editCorreo').value.trim();
         cita.telefono = document.getElementById('editTelefono').value.trim();
-        cita.fecha = document.getElementById('editFecha').value;
-        cita.metodoPago = document.getElementById('editMetodoPago').value.trim();
+        cita.fecha = `${fecha}T${hora}`;
+        cita.metodoPago = document.getElementById('editMetodoPago').value;
         cita.pagado = document.getElementById('editPagado').value === 'true';
 
         guardarYCargar();
         modalEditar.hide();
-        Swal.fire('Actualizado', 'La cita ha sido actualizada.', 'success');
+        Swal.fire('Actualizada', 'La cita ha sido actualizada.', 'success');
       });
 
       function guardarYCargar() {
@@ -219,7 +230,6 @@
         window.location.href = 'index.html';
       });
 
-      
       guardarYCargar();
     });
   </script>
