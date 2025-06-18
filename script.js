@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
     events: citas.map(cita => ({
       id: cita.id,
       title: `${cita.nombre} ${cita.pagado ? '✅' : '❌'}`,
-      start: cita.fecha,
+      start: `${cita.fecha}T${cita.hora}`,
       extendedProps: {
         correo: cita.correo,
         telefono: cita.telefono,
@@ -64,25 +64,34 @@ document.addEventListener('DOMContentLoaded', function () {
     const correo = document.getElementById('correo').value.trim();
     const telefono = document.getElementById('telefono').value.trim();
     const fecha = document.getElementById('fecha').value;
+    const hora = document.getElementById('hora').value;
     const metodoPago = document.getElementById('metodoPago').value;
     const pagado = document.getElementById('pagado').checked;
     const capturaInput = document.getElementById('captura');
     const file = capturaInput.files[0];
-
-    if (!fecha) return;
-
     const editId = document.getElementById('editId').value;
+
+    if (!fecha || !hora) {
+      Swal.fire('Error', 'Debe seleccionar una fecha y una hora.', 'error');
+      return;
+    }
+
+    // Validar rango de hora permitido
+    if (hora < "14:30" || hora > "16:30") {
+      Swal.fire('Hora inválida', 'Por favor selecciona una hora entre 2:30 PM y 4:30 PM.', 'error');
+      return;
+    }
 
     const enviarWhatsApp = (cita) => {
       const mensaje = `*Nueva cita agendada:*\n\n` +
         `👤 *Nombre:* ${cita.nombre}\n` +
         `📧 *Correo:* ${cita.correo}\n` +
         `📱 *Teléfono:* ${cita.telefono}\n` +
-        `📅 *Fecha:* ${cita.fecha}\n` +
+        `📅 *Fecha:* ${cita.fecha} ${cita.hora}\n` +
         `💳 *Método de pago:* ${cita.metodoPago}\n` +
         `💰 *¿Pagado?:* ${cita.pagado ? "Sí" : "No"}`;
 
-      const numeroWhatsApp = "584142674367"; // reemplaza por el número real
+      const numeroWhatsApp = "584142674367";
       const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
 
       Swal.fire("Cita registrada", "Se abrirá WhatsApp para notificar.", "success").then(() => {
@@ -101,6 +110,7 @@ document.addEventListener('DOMContentLoaded', function () {
           correo,
           telefono,
           fecha,
+          hora,
           metodoPago,
           pagado,
           captura: capturaBase64 || citas[index].captura
@@ -113,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
         calendar.addEvent({
           id: citaEditada.id,
           title: `${nombre} ${pagado ? '✅' : '❌'}`,
-          start: fecha,
+          start: `${fecha}T${hora}`,
           extendedProps: {
             correo,
             telefono,
@@ -138,8 +148,8 @@ document.addEventListener('DOMContentLoaded', function () {
         actualizarCita(null);
       }
     } else {
-      if (citas.some(cita => cita.fecha === fecha && cita.nombre === nombre)) {
-        Swal.fire('Error', 'La fecha ya está ocupada por esta persona.', 'error');
+      if (citas.some(cita => cita.fecha === fecha && cita.hora === hora)) {
+        Swal.fire('Error', 'Ya hay una cita para esta fecha y hora.', 'error');
         return;
       }
 
@@ -150,6 +160,7 @@ document.addEventListener('DOMContentLoaded', function () {
           correo,
           telefono,
           fecha,
+          hora,
           metodoPago,
           pagado,
           captura: capturaBase64
@@ -161,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
         calendar.addEvent({
           id: nuevaCita.id,
           title: `${nombre} ${pagado ? '✅' : '❌'}`,
-          start: fecha,
+          start: `${fecha}T${hora}`,
           extendedProps: {
             correo,
             telefono,
@@ -196,6 +207,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('correo').value = cita.correo;
     document.getElementById('telefono').value = cita.telefono;
     document.getElementById('fecha').value = cita.fecha;
+    document.getElementById('hora').value = cita.hora;
     document.getElementById('metodoPago').value = cita.metodoPago;
     document.getElementById('pagado').checked = cita.pagado;
 
